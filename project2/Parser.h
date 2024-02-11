@@ -1,5 +1,10 @@
 #pragma once
 #include "../project1/Token.h"
+#include "Parameter.h"
+#include "Predicate.h"
+#include "Rule.h"
+//#include "Datalog.h"
+
 #include <stdexcept>
 #include <iostream>
 #include <vector>
