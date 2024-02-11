@@ -3,6 +3,8 @@
 #include "Token.h"
 #include <cctype>
 #include <vector>
+#include <iostream>
+
 using namespace std;
 
 class Scanner {
@@ -15,8 +17,28 @@ class Scanner {
         // insert other variables to track in constructor
         Scanner(const string& input) : input(input), cur_line(1) {}
 
+        void scan_all_tokens() {
+            while (true) {
+                // project 2 does not print out the tokens
+                // Note: project 1 accepted all tokens, but project 2 skips over tokens
+                // Note: this means
+//                Token t = scanToken();
+//                cout << t.toString() << endl;
+        //        print_token_list(s.get_token_list()); // DEBUG
 
-        Token scanToken() {
+                // project 2 only needs to call scanToken, no printing necessary
+                scanToken();
+//                cout << token_list.back().toString() << endl;
+
+                if (token_list.back().get_token_type() == EOFILE) {
+                    // project 1 prints out tokens, project 2 does not
+//                    cout << "Total Tokens = " << get_token_list().size() << endl;
+                    return;
+                }
+            }
+        }
+
+        void scanToken() {
 //---------------Initial Checks----------------------------------//
 //            cout << "DEBUG MAIN 0: initial checks.   current input: " << input << endl;
             if (is_EOF())
@@ -153,7 +175,7 @@ class Scanner {
             }
 
             if (input_begins_with('#')) {
-//                cout << "input.at(0) --> " <<  input.at(0) <<  " was detected as an hashtag" << endl;
+//                cout << "input.at(0) --> " <<  input.at(0) <<  " was detected as a hashtag" << endl;
 
                 string comment_value;
                 comment_value += input.at(0);
@@ -169,7 +191,7 @@ class Scanner {
                         // if EOF is reached
                         if (is_EOF()) {
                             // create and return UNDEFINED token
-//                            return UNDEFINED_token(comment_start_line, comment_value);
+                            return UNDEFINED_token(comment_start_line, comment_value);
                         }
 
 //                        cout << "new iteration of loop. input.at(0): " << input.at(0) << endl;
@@ -185,9 +207,12 @@ class Scanner {
                             // if end of block comment is reached
                             if (input_begins_with('#')) {
                                 // create and return COMMENT token
-                                comment_value += "|#";
-                                advance_input(2);
-                                return COMMENT_token(comment_start_line, comment_value);
+                                // comment_value += input.at(0);
+                                advance_input(1);
+                                // project 2 requires no comment tokens to be created
+                                // return COMMENT_token(comment_start_line, comment_value);
+                                scanToken();
+                                return;
                             }
                         }
                         // otherwise, move to next character
@@ -203,11 +228,17 @@ class Scanner {
                             // create and return COMMENT token
 //                        cout << "checking for new line inside a single line comment" << endl;
                         if (is_EOF()) {
-                            return COMMENT_token(comment_start_line, comment_value);
+                            // project 2 requires no comment tokens to be created
+                            // return COMMENT_token(comment_start_line, comment_value);
+                            scanToken();
+                            return;
                         }
                         if (check_for_new_line()) {
                             advance_input(1);
-                            return COMMENT_token(comment_start_line, comment_value);
+                            // project 2 requires no comment tokens to be created
+                            // return COMMENT_token(comment_start_line, comment_value);
+                            scanToken();
+                            return;
                         }
                         // else
                             // gather the comment string
@@ -235,107 +266,107 @@ class Scanner {
     // remove the selected string from input
     // create and return the token
 
-        Token append_token(Token temp_token) {
+        void append_token(Token temp_token) {
             token_list.push_back(temp_token);
-            return temp_token;
+//            return temp_token;
         }
 
         // append_token(
-        Token COMMA_token(int line) {
+        void COMMA_token(int line) {
             advance_input(1);
             TokenType type = COMMA;
             return append_token(Token(type, ",", line));
         }
 
-        Token PERIOD_token(int line) {
+        void PERIOD_token(int line) {
             advance_input(1);
             TokenType type = PERIOD;
             return append_token(Token(type, ".", line));
         }
 
-        Token Q_MARK_token(int line) {
+        void Q_MARK_token(int line) {
             advance_input(1);
             TokenType type = Q_MARK;
             return append_token(Token(type, "?", line));
         }
 
-        Token LEFT_PAREN_token(int line) {
+        void LEFT_PAREN_token(int line) {
             advance_input(1);
             TokenType type = LEFT_PAREN;
             return append_token(Token(type, "(", line));
         }
 
-        Token RIGHT_PAREN_token(int line) {
+        void RIGHT_PAREN_token(int line) {
             advance_input(1);
             TokenType type = RIGHT_PAREN;
             return append_token(Token(type, ")", line));
         }
 
-        Token COLON_token(int line) {
+        void COLON_token(int line) {
             advance_input(1);
             TokenType type = COLON;
             return append_token(Token(type, ":", line));
         }
 
-        Token COLON_DASH_token(int line) {
+        void COLON_DASH_token(int line) {
             advance_input(2);
             TokenType type = COLON_DASH;
             return append_token(Token(type, ":-", line));
         }
 
-        Token MULTIPLY_token(int line) {
+        void MULTIPLY_token(int line) {
             advance_input(1);
             TokenType type = MULTIPLY;
             return append_token(Token(type, "*", line));
         }
 
-        Token ADD_token(int line) {
+        void ADD_token(int line) {
             advance_input(1);
             TokenType type = ADD;
             return append_token(Token(type, "+", line));
         }
 
-        Token SCHEMES_token(int line) {
+        void SCHEMES_token(int line) {
             TokenType type = SCHEMES;
             return append_token(Token(type, "Schemes", line));
         }
 
-        Token FACTS_token(int line) {
+        void FACTS_token(int line) {
             TokenType type = FACTS;
             return append_token(Token(type, "Facts", line));
         }
 
-        Token RULES_token(int line) {
+        void RULES_token(int line) {
             TokenType type = RULES;
             return append_token(Token(type, "Rules", line));
         }
 
-        Token QUERIES_token(int line) {
+        void QUERIES_token(int line) {
             TokenType type = QUERIES;
             return append_token(Token(type, "Queries", line));
         }
 
-        Token ID_token(int line, string value) {
+        void ID_token(int line, string value) {
             TokenType type = ID;
             return append_token(Token(type, value, line));
         }
 
-        Token STRING_token(int line, string value) {
+        void STRING_token(int line, string value) {
             TokenType type = STRING;
             return append_token(Token(type, value, line));
         }
 
-    Token COMMENT_token(int line, string value) {
-        TokenType type = COMMENT;
-        return append_token(Token(type, value, line));
-    }
+        void COMMENT_token(int line, string value) {
+            TokenType type = COMMENT;
+            return append_token(Token(type, value, line));
+        }
 
-    Token UNDEFINED_token(int line, string value) {
-        TokenType type = UNDEFINED;
-        return append_token(Token(type, value, line));
-    }
+        void UNDEFINED_token(int line, string value) {
+            TokenType type = UNDEFINED;
+            return append_token(Token(type, value, line));
+        }
 
-        Token EOF_token(int line) {
+        void EOF_token(int line) {
             TokenType type = EOFILE;
             return append_token(Token(type, "", line));
         }
@@ -370,15 +401,23 @@ class Scanner {
             }
             return false;
         }
-//--------------Testing Functions-------------------------//
+//--------------get Functions-------------------------//
         string get_input() {
             return input;
         }
 
-    vector<Token> get_token_list() {
-        return token_list;
-    }
+        vector<Token> get_token_list() {
+            return token_list;
+        }
 
+//-----------Debugging Functions----------------------//
+        void print_token_list(std::vector<Token> const &list) {
+            cout << "-------start token list--------" << endl;
 
+            for(int i=0; i < list.size(); i++) {
+                cout << list.at(i).toString() << endl;
+            }
+        cout << "-------end token list--------" << endl;
+        }
 };
 

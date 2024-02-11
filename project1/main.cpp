@@ -19,39 +19,33 @@ using namespace std;
         // when a string or a comment continues over a new line
             // the printed token toString() is separated by the new line
 
-//void print_token_list(std::vector<Token> const &a) {
-//    cout << "The vector elements are : ";
-//
-//    for(int i=0; i < a.size(); i++)
-//        cout << a.at(i).toString() << ' ';
-//    cout << endl;
-//}
+
 
 int main(int argc, char* argv[]) {
-    // declar variables
+    // declare variables
     string input_filename = argv[1];
     ifstream input_file;
     input_file.open(input_filename);
     stringstream ss;
 
-//    cout << "before processing string" << endl;
+//  processing file into string
     ss << input_file.rdbuf();
     string input_string = ss.str();
     input_file.close();
 
-//    cout << "file has been processed into a string: " << input_string << endl;
-//
-
+// scanning string into a vector of tokens
     Scanner s = Scanner(input_string);
-    while (true) {
-        Token t = s.scanToken();
-        cout << t.toString() << endl;
+    s.scan_all_tokens();
 
-//        print_token_list(s.get_token_list());
-
-        if (t.get_token_type() == EOFILE) {
-            cout << "Total Tokens = " << s.get_token_list().size() << endl;
-            break;
-        }
-    }
+//    while (true) {
+//        Token t = s.scanToken();
+//        cout << t.toString() << endl;
+//
+////        print_token_list(s.get_token_list());
+//
+//        if (t.get_token_type() == EOFILE) {
+//            cout << "Total Tokens = " << s.get_token_list().size() << endl;
+//            break;
+//        }
+//    }
 }
