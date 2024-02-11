@@ -30,10 +30,12 @@ int main(int argc, char* argv[]) {
     // parsing
     try {
         Parser p = Parser(token_list);
-        p.datalogProgram();
+        p.parse();
     }
-    catch (Token problem_token) {
+    catch (Token& problem_token) {
         cout << "Failure!" << endl;
         cout << "  " << problem_token.toString() << endl;
+        return -1;
     }
+    cout << "Success!" << endl;
 }

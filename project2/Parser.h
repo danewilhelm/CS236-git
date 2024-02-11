@@ -1,7 +1,9 @@
+#pragma once
 #include "../project1/Token.h"
 #include <stdexcept>
 #include <iostream>
 #include <vector>
+
 
 
 using namespace std;
@@ -12,6 +14,11 @@ class Parser {
     public:
 //---------------constructor------------------------------------//
         Parser(const vector<Token>& tokens) : tokens(tokens) {}
+
+        // start the recursive parsing algorithm by calling the start symbol
+        void parse() {
+            datalogProgram();
+        }
 
 //---------------parser functions for Grammar Rules-------------------------//
     //-------start symbol--------------------------//

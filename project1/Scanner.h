@@ -411,13 +411,13 @@ class Scanner {
         }
 
 //-----------Debugging Functions----------------------//
-        void print_token_list(std::vector<Token> const &list) {
-            cout << "-------start token list--------" << endl;
-
-            for(int i=0; i < list.size(); i++) {
-                cout << list.at(i).toString() << endl;
-            }
-        cout << "-------end token list--------" << endl;
-        }
+//        void print_token_list(std::vector<Token> const &list) {
+//            cout << "-------start token list--------" << endl;
+//
+//            for(int i=0; i < list.size(); i++) {
+//                cout << list.at(i).toString() << endl;
+//            }
+//        cout << "-------end token list--------" << endl;
+//        }
 };
 
