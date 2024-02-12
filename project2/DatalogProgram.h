@@ -50,7 +50,7 @@ public:
     template <typename T>
     string list_to_string(T input_list, string tail) {
         string t_string;
-        for (int i = 0; i < input_list.size(); i++) {
+        for (size_t i = 0; i < input_list.size(); i++) {
             t_string += "  " + input_list.at(i).to_string() + tail + "\n";
         }
         return t_string;
