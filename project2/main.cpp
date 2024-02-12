@@ -46,6 +46,8 @@ Rule test_rule() {
     return t_rule;
 }
 
+
+
 void test_datalog_program() {
     vector<Predicate> t_scheme_list;
     t_scheme_list.push_back(create_predicate4("snap", "S", "N", "A", "P"));
@@ -63,6 +65,17 @@ void test_datalog_program() {
 
     DatalogProgram test_datalog = DatalogProgram(t_scheme_list, t_fact_list, t_rule_list, t_query_list);
     cout << test_datalog.to_string_datalog() << endl;
+}
+
+void test_clear() {
+    vector<Parameter> t_parameter_list = {Parameter("S"), Parameter("N"), Parameter("A"), Parameter("P")};
+    Predicate test_predicate1 = Predicate("snap", t_parameter_list);
+
+    vector<Predicate> predicate_list_1 = {test_predicate1};
+    vector<Predicate> predicate_list_2 = {test_predicate1};
+    predicate_list_1.clear();
+    cout << "after clearing list1, list2 has size: " << predicate_list_2.size() << endl;
+    cout << "after clearing list1, list2 has predicate: " << predicate_list_2.at(0).to_string() << endl;
 }
 
 using namespace std;
@@ -86,15 +99,16 @@ int main(int argc, char* argv[]) {
 
     // parsing tokens into a datalog object
     Parser p = Parser(token_list);
-    p.parse();
+    DatalogProgram test_datalog_program = p.parse();
 
     // testing
-    cout << "---testing classes---" << endl;
+//    cout << "---testing classes---" << endl;
 
 // calling testing functions
 //    test_predicate();
 //    test_rule();
-    test_datalog_program();
+//    test_datalog_program();
+//    test_clear();
 
 
 

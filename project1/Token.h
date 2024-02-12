@@ -92,5 +92,9 @@ class Token {
             return type;
         }
 
+    string get_token_value() const{
+        return value;
+    }
+
 
 };

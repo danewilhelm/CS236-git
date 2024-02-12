@@ -46,6 +46,7 @@ public:
 
 //---------------parser functions for Grammar Rules-------------------------//
 //-------start symbol--------------------------//
+    // COMPLETE
     void datalog_program() {
         if (tokenType() == SCHEMES) {
             match(SCHEMES);
@@ -75,20 +76,22 @@ public:
 
 
 //-------section list grammar rules------------//
+    // COMPLETE
     void schemeList() {
         if (tokenType() == ID) {
-            scheme();
+            scheme(); // appends the created predicate to the list
             schemeList();
         } // else: lambda
     }
 
+    // COMPLETE
     void factList() {
         if (tokenType() == ID) {
-            fact();
+            fact(); // appends the created predicate to the list
             factList();
         } // else: lambda
     }
-
+    // COMPLETE
     void ruleList() {
         if (tokenType() == ID) {
             rule();
@@ -96,9 +99,10 @@ public:
         } // else: lambda
     }
 
+    // COMPLETE
     void queryList() {
         if (tokenType() == ID) {
-            query();
+            query(); // appends the created predicate to the list
             queryList();
         } // else: lambda
     }
@@ -106,7 +110,7 @@ public:
 
 //------Individual lines grammar rules--------//
     // COMPLETE
-    Predicate scheme() { // this function creates a scheme predicate
+    void scheme() { // this function creates a scheme predicate
         if (tokenType() == ID) {
             cache_parameter_list.clear(); // clears the cache for this predicate
             string temp_name = match(ID); // This is the name for the predicate
@@ -114,14 +118,14 @@ public:
             add_string_to_cache_parameter_list(match(ID)); // This ID is a parameter for a scheme predicate
             idList();
             match(RIGHT_PAREN);
-            return {temp_name, cache_parameter_list};
+            scheme_list_sum.push_back(Predicate(temp_name, cache_parameter_list)); // adds predicate to scheme list
         } else {
             throwError();
         }
     }
 
     // COMPLETE
-    Predicate fact() { // this function creates a fact predicate
+    void fact() { // this function creates a fact predicate
         if (tokenType() == ID) {
             cache_parameter_list.clear(); // clears the cache for this predicate
             string temp_name = match(ID); // This is the name for the predicate
@@ -130,14 +134,14 @@ public:
             stringList();
             match(RIGHT_PAREN);
             match(PERIOD);
-            return {temp_name, cache_parameter_list};
+            fact_list_sum.push_back(Predicate(temp_name, cache_parameter_list));
         } else {
             throwError();
         }
     }
 
     // COMPLETE
-    Rule rule() { // this function creates a rule
+    void rule() { // this function creates a rule
         Predicate temp_head_predicate = headPredicate();
         if (tokenType() == COLON_DASH) {
             cache_predicates.clear(); // clears the cache
@@ -145,18 +149,18 @@ public:
             cache_predicates.push_back(predicate());
             predicateList();
             match(PERIOD);
-            return {temp_head_predicate, cache_predicates};
+            rule_list_sum.push_back(Rule(temp_head_predicate, cache_predicates));
         } else {
             throwError();
         }
     }
 
     // COMPLETE
-    Predicate query() {
+    void query() {
         Predicate temp_predicate = predicate();
         if (tokenType() == Q_MARK) {
             match(Q_MARK);
-            return temp_predicate;
+            query_list_sum.push_back(temp_predicate);
         } else {
             throwError();
         }
@@ -196,10 +200,11 @@ public:
 
 //-------ending list grammar rules------------//
 
+    // COMPLETE
     void predicateList() {
         if (tokenType() == COMMA) {
             match(COMMA);
-            predicate();
+            cache_predicates.push_back(predicate()); // This is one predicate for the body predicates for a rule
             predicateList();
         } // else: lambda
     }
@@ -267,12 +272,12 @@ public:
     }
 
 
-    string get_token_string() {
-        return current_token().toString();
+    string getTokenValue() {
+        return current_token().get_token_value();
     }
 
     string advanceToken() {
-        string temp = get_token_string();
+        string temp = getTokenValue();
         tokens.erase(tokens.begin());
         return temp;
     }
