@@ -19,7 +19,7 @@ public:
 
     string to_string() {
         string temp_string = head_predicate.to_string() + " :- ";
-        for (int i = 0; i < body_predicate_list.size(); i++) {
+        for (size_t i = 0; i < body_predicate_list.size(); i++) {
             temp_string += body_predicate_list.at(i).to_string();
             if (i + 1 < body_predicate_list.size()) {
                 temp_string += ",";

@@ -22,7 +22,7 @@ public:
     // converts object to string representation
     string to_string() {
         string temp_string = name + "(";
-        for (int i = 0; i < parameter_list.size(); i++) {
+        for (size_t i = 0; i < parameter_list.size(); i++) {
             temp_string += parameter_list.at(i).to_string();
             if (i + 1 < parameter_list.size()) {
                 temp_string += ",";
