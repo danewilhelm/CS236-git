@@ -4,6 +4,8 @@
 #include "Parser.h"
 #include "Parameter.h"
 #include "Predicate.h"
+#include "Rule.h"
+#include "DatalogProgram.h"
 
 #include <vector>
 #include <iostream>
@@ -16,7 +18,18 @@ void test_predicate() {
     cout << test_predicate1.to_string() << endl;
 }
 
-void test_rule() {
+
+Predicate create_predicate4(string name, string a, string b, string c, string d) {
+    vector<Parameter> t_parameter_list = {Parameter(a), Parameter(b), Parameter(c), Parameter(d)};
+    return Predicate(name, t_parameter_list);
+}
+
+Predicate create_predicate2(string name, string a, string b) {
+    vector<Parameter> t_parameter_list = {Parameter(a), Parameter(b)};
+    return Predicate(name, t_parameter_list);
+}
+
+Rule test_rule() {
     // testing rule
     vector<Parameter> vp1 = {Parameter("X"), Parameter("Y")};
     Predicate t_head_predicate = Predicate("HasSameAddress", vp1);
@@ -29,10 +42,27 @@ void test_rule() {
 
     vector<Predicate> t_body_predicate_list = {t_body_predicate1, t_body_predicate2};
     Rule t_rule = Rule(t_head_predicate, t_body_predicate_list);
-    cout << t_rule.to_string() << endl;
+//    cout << t_rule.to_string() << endl;
+    return t_rule;
+}
 
+void test_datalog_program() {
+    vector<Predicate> t_scheme_list;
+    t_scheme_list.push_back(create_predicate4("snap", "S", "N", "A", "P"));
+    t_scheme_list.push_back(create_predicate2("HasSameAddress", "X", "Y"));
 
+    vector<Predicate> t_fact_list;
+    t_fact_list.push_back(create_predicate4("snap", "'12345'", "'C. Brown'", "'12 Apple'", "'555-1234'"));
+    t_fact_list.push_back(create_predicate4("snap", "'33333'", "'Snoopy'", "'12 Apple'", "'555-1234'"));
 
+    vector<Rule> t_rule_list;
+    t_rule_list.push_back(test_rule());
+
+    vector<Predicate> t_query_list;
+    t_query_list.push_back(create_predicate2("hasSameAddress", "'Snoopy'", "Who"));
+
+    DatalogProgram test_datalog = DatalogProgram(t_scheme_list, t_fact_list, t_rule_list, t_query_list);
+    cout << test_datalog.to_string_datalog() << endl;
 }
 
 using namespace std;
@@ -54,23 +84,17 @@ int main(int argc, char* argv[]) {
     s.scan_all_tokens();
     vector<Token> token_list = s.get_token_list();
 
-    // parsing
-    try {
-        Parser p = Parser(token_list);
-        p.parse();
-    }
-    catch (Token& problem_token) {
-        cout << "Failure!" << endl;
-        cout << "  " << problem_token.toString() << endl;
-        return -1;
-    }
-    cout << "Success!" << endl;
+    // parsing tokens into a datalog object
+    Parser p = Parser(token_list);
+    p.parse();
+
+    // testing
     cout << "---testing classes---" << endl;
 
-    // Testing predicate and parameter
+// calling testing functions
 //    test_predicate();
-    test_rule();
-
+//    test_rule();
+    test_datalog_program();
 
 
 

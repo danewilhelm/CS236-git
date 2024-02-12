@@ -25,7 +25,6 @@ public:
                 temp_string += ",";
             }
         }
-        temp_string += ".";
         return temp_string;
     }
 

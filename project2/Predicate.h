@@ -11,14 +11,12 @@ class Predicate {
 private:
     string name;
     vector<Parameter> parameter_list;
-    string tail;
 public:
 
     // constructor
-    Predicate(string in_name, vector<Parameter> in_parameter_list, string in_tail = "") {
+    Predicate(string in_name, vector<Parameter> in_parameter_list) {
         name = in_name;
         parameter_list = in_parameter_list;
-        tail = in_tail;
     }
 
     // converts object to string representation
@@ -30,7 +28,7 @@ public:
                 temp_string += ",";
             }
         }
-        temp_string += ")" + tail;
+        temp_string += ")";
         return temp_string;
     }
 

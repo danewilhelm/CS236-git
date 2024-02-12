@@ -3,7 +3,7 @@
 #include "Parameter.h"
 #include "Predicate.h"
 #include "Rule.h"
-//#include "Datalog.h"
+#include "DatalogProgram.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -14,228 +14,280 @@
 using namespace std;
 
 class Parser {
-    private:
-        vector<Token> tokens;
-    public:
-//---------------constructor------------------------------------//
-        Parser(const vector<Token>& tokens) : tokens(tokens) {}
+private:
+    vector<Token> tokens;
+    vector<Predicate> scheme_list_sum;
+    vector<Predicate> fact_list_sum;
+    vector<Rule> rule_list_sum;
+    vector<Predicate> query_list_sum;
 
-        // start the recursive parsing algorithm by calling the start symbol
-        void parse() {
-            datalogProgram();
+    vector<Parameter> cache_parameter_list = {}; // note: the cache is cleared before each new predicate is parsed
+    vector<Predicate> cache_predicates = {}; // note: the cache is cleared before each new list is parsed
+
+public:
+//---------------constructor------------------------------------//
+    Parser(const vector<Token>& tokens) : tokens(tokens) {}
+
+    // start the recursive parsing algorithm by calling the start symbol
+    DatalogProgram parse() {
+        try {
+             datalog_program();
         }
+        catch (Token& problem_token) {
+            cout << "Failure!" << endl;
+            cout << "  " << problem_token.toString() << endl;
+            exit(0);
+        }
+        cout << "Success!" << endl;
+        DatalogProgram datalog_program_temp = DatalogProgram(scheme_list_sum, fact_list_sum, rule_list_sum, query_list_sum);
+        cout << datalog_program_temp.to_string_datalog();
+        return datalog_program_temp;
+    }
 
 //---------------parser functions for Grammar Rules-------------------------//
-    //-------start symbol--------------------------//
-        void datalogProgram() {
-            if (tokenType() == SCHEMES) {
-                match(SCHEMES);
-                match(COLON);
-                scheme();
-                schemeList();
+//-------start symbol--------------------------//
+    void datalog_program() {
+        if (tokenType() == SCHEMES) {
+            match(SCHEMES);
+            match(COLON);
+            scheme();
+            schemeList();
 
-                match(FACTS);
-                match(COLON);
-                factList();
+            match(FACTS);
+            match(COLON);
+            factList();
 
-                match(RULES);
-                match(COLON);
-                ruleList();
+            match(RULES);
+            match(COLON);
+            ruleList();
 
-                match(QUERIES);
-                match(COLON);
-                query();
-                queryList();
+            match(QUERIES);
+            match(COLON);
+            query();
+            queryList();
 
-                match(EOFILE);
-            } else {
-                throwError();
-            }
-        }
-
-
-
-    //-------section list grammar rules------------//
-        void schemeList() {
-            if (tokenType() == ID) {
-                scheme();
-                schemeList();
-            } // else: lambda
-        }
-
-        void factList() {
-            if (tokenType() == ID) {
-                fact();
-                factList();
-            } // else: lambda
-        }
-
-        void ruleList() {
-            if (tokenType() == ID) {
-                rule();
-                ruleList();
-            } // else: lambda
-        }
-
-        void queryList() {
-            if (tokenType() == ID) {
-                query();
-                queryList();
-            } // else: lambda
-        }
-
-
-    //------Individual lines grammar rules--------//
-        void scheme() {
-        // Grammar Rule
-        // scheme -> ID LEFT_PAREN ID idList RIGHT_PAREN
-        if (tokenType() == ID) {
-            match(ID);
-            match(LEFT_PAREN);
-            match(ID);
-            idList();
-            match(RIGHT_PAREN);
+            match(EOFILE);
         } else {
             throwError();
         }
     }
 
-        void fact() {
-            if (tokenType() == ID) {
-                match(ID);
-                match(LEFT_PAREN);
-                match(STRING);
-                stringList();
-                match(RIGHT_PAREN);
-                match(PERIOD);
-            } else {
-                throwError();
-            }
-        }
 
-        void rule() {
-            headPredicate();
-            if (tokenType() == COLON_DASH) {
-                match(COLON_DASH);
-                predicate();
-                predicateList();
-                match(PERIOD);
-            } else {
-                throwError();
-            }
-        }
 
-        void query() {
+//-------section list grammar rules------------//
+    void schemeList() {
+        if (tokenType() == ID) {
+            scheme();
+            schemeList();
+        } // else: lambda
+    }
+
+    void factList() {
+        if (tokenType() == ID) {
+            fact();
+            factList();
+        } // else: lambda
+    }
+
+    void ruleList() {
+        if (tokenType() == ID) {
+            rule();
+            ruleList();
+        } // else: lambda
+    }
+
+    void queryList() {
+        if (tokenType() == ID) {
+            query();
+            queryList();
+        } // else: lambda
+    }
+
+
+//------Individual lines grammar rules--------//
+    // COMPLETE
+    Predicate scheme() { // this function creates a scheme predicate
+        if (tokenType() == ID) {
+            cache_parameter_list.clear(); // clears the cache for this predicate
+            string temp_name = match(ID); // This is the name for the predicate
+            match(LEFT_PAREN);
+            add_string_to_cache_parameter_list(match(ID)); // This ID is a parameter for a scheme predicate
+            idList();
+            match(RIGHT_PAREN);
+            return {temp_name, cache_parameter_list};
+        } else {
+            throwError();
+        }
+    }
+
+    // COMPLETE
+    Predicate fact() { // this function creates a fact predicate
+        if (tokenType() == ID) {
+            cache_parameter_list.clear(); // clears the cache for this predicate
+            string temp_name = match(ID); // This is the name for the predicate
+            match(LEFT_PAREN);
+            add_string_to_cache_parameter_list(match(STRING)); // This STRING is a parameter for a fact predicate
+            stringList();
+            match(RIGHT_PAREN);
+            match(PERIOD);
+            return {temp_name, cache_parameter_list};
+        } else {
+            throwError();
+        }
+    }
+
+    // COMPLETE
+    Rule rule() { // this function creates a rule
+        Predicate temp_head_predicate = headPredicate();
+        if (tokenType() == COLON_DASH) {
+            cache_predicates.clear(); // clears the cache
+            match(COLON_DASH);
+            cache_predicates.push_back(predicate());
+            predicateList();
+            match(PERIOD);
+            return {temp_head_predicate, cache_predicates};
+        } else {
+            throwError();
+        }
+    }
+
+    // COMPLETE
+    Predicate query() {
+        Predicate temp_predicate = predicate();
+        if (tokenType() == Q_MARK) {
+            match(Q_MARK);
+            return temp_predicate;
+        } else {
+            throwError();
+        }
+    }
+
+
+//-------predicate grammar rules-------------//
+    // COMPLETE
+    Predicate headPredicate() {
+        if (tokenType() == ID) {
+            cache_parameter_list.clear(); // clears the cache for this predicate
+            string temp_name = match(ID); // This is the name for the predicate
+            match(LEFT_PAREN);
+            add_string_to_cache_parameter_list(match(ID)); // This ID is a parameter for a rule's head predicate
+            idList();
+            match(RIGHT_PAREN);
+            return {temp_name, cache_parameter_list};
+        } else {
+            throwError();
+        }
+    }
+
+    // COMPLETE
+    Predicate predicate() {
+        if (tokenType() == ID) {
+            cache_parameter_list.clear(); // clears the cache for this predicate
+            string temp_name = match(ID); // This is the name for the predicate
+            match(LEFT_PAREN);
+            cache_parameter_list.push_back(parameter()); // This is a parameter for the predicate
+            parameterList();
+            match(RIGHT_PAREN);
+            return {temp_name, cache_parameter_list};
+        } else {
+            throwError();
+        }
+    }
+
+//-------ending list grammar rules------------//
+
+    void predicateList() {
+        if (tokenType() == COMMA) {
+            match(COMMA);
             predicate();
-            if (tokenType() == Q_MARK) {
-                match(Q_MARK);
-            } else {
-                throwError();
-            }
+            predicateList();
+        } // else: lambda
+    }
+
+    // COMPLETE
+    void parameterList() {
+        if (tokenType() == COMMA) {
+            match(COMMA);
+            cache_parameter_list.push_back(parameter()); // This is a parameter for a predicate
+            parameterList();
+        } // else: lambda
+    }
+
+    // COMPLETE
+    void stringList() {
+        if (tokenType() == COMMA) {
+            match(COMMA);
+            add_string_to_cache_parameter_list(match(STRING)); // This is a parameter for a fact predicate
+            stringList();
+        // else: lambda
         }
+    }
+    // COMPLETE
+    void idList() {
+        if (tokenType() == COMMA) {
+            match(COMMA);
+            add_string_to_cache_parameter_list(match(ID)); // This is a parameter for a scheme predicate
+            idList();
+        } // else: lambda
+    }
 
-
-    //-------predicate grammar rules-------------//
-        void headPredicate() {
-            if (tokenType() == ID) {
-                match(ID);
-                match(LEFT_PAREN);
-                match(ID);
-                idList();
-                match(RIGHT_PAREN);
-            } else {
-                throwError();
-            }
+//-------Dead end grammar rules-------//
+    // COMPLETE
+    Parameter parameter() {
+        if (tokenType() == STRING) {
+            string temp_string = match(STRING);
+            return {temp_string};
+        } else if (tokenType() == ID) {
+            string temp_string = match(ID);
+            return {temp_string};
+        } else {
+            throwError();
         }
-
-        void predicate() {
-            if (tokenType() == ID) {
-                match(ID);
-                match(LEFT_PAREN);
-                parameter();
-                parameterList();
-                match(RIGHT_PAREN);
-            } else {
-                throwError();
-            }
-        }
-
-    //-------ending list grammar rules------------//
-
-        void predicateList() {
-            if (tokenType() == COMMA) {
-                match(COMMA);
-                predicate();
-                predicateList();
-            } // else: lambda
-        }
-
-        void parameterList() {
-            if (tokenType() == COMMA) {
-                match(COMMA);
-                parameter();
-                parameterList();
-            } // else: lambda
-        }
-
-        void stringList() {
-            if (tokenType() == COMMA) {
-                match(COMMA);
-                match(STRING);
-                stringList();
-            // else: lambda
-            }
-        }
-
-        void idList() {
-            if (tokenType() == COMMA) {
-                match(COMMA);
-                match(ID);
-                idList();
-            } // else: lambda
-        }
-
-    //-------Dead end grammar rules-------//
-        void parameter() {
-            if (tokenType() == STRING) {
-                match(STRING);
-            } else if (tokenType() == ID) {
-                match(ID);
-            } else {
-                throwError();
-            }
-        }
+    }
 
 
 //---------------helper functions------------------------------//
+    //------get functions------//
+    Token current_token() {
+    return tokens.at(0);
+    }
 
-        TokenType tokenType() const {
-            return tokens.at(0).get_token_type();
-        }
+    //--------parsing helper functions----------//
+    TokenType tokenType() const {
+        return tokens.at(0).get_token_type();
+    }
 
-        void advanceToken() {
-            tokens.erase(tokens.begin());
-        }
-
-        Token current_token() {
-        return tokens.at(0);
-}
-        void throwError() {
+    void throwError() {
 //            cout << "error" << endl; // DEBUG?
-            throw current_token();
-        }
+        throw current_token();
+    }
 
-        void match(TokenType t) {
+    void add_string_to_cache_parameter_list(string temp) {
+        cache_parameter_list.push_back(Parameter(temp));
+    }
+
+
+    string get_token_string() {
+        return current_token().toString();
+    }
+
+    string advanceToken() {
+        string temp = get_token_string();
+        tokens.erase(tokens.begin());
+        return temp;
+    }
+
+    string match(TokenType t) {
 //            cout << "match: " << t << endl; // DEBUG
-            // if the current token type matches t
-            if (tokenType() == t) {
-                // advance to the next token
-                advanceToken();
-            } else {
-                // report a syntax error
-                throwError();
-            }
+        // if the current token type matches t
+        if (tokenType() == t) {
+            // advance to the next token
+            return advanceToken();
+        } else {
+            // report a syntax error
+            throwError();
         }
+    }
 
 };
 
