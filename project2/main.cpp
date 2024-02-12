@@ -1,5 +1,5 @@
-#include "../project1/Token.h"
-#include "../project1/Scanner.h"
+#include "Token.h"
+#include "Scanner.h"
 
 #include "Parser.h"
 #include "Parameter.h"
@@ -13,7 +13,7 @@
 
 
 void test_predicate() {
-    vector<Parameter> t_parameter_list = {Parameter("S"), Parameter("N"), Parameter("A"), Parameter("P")};
+    vector<Parameter> t_parameter_list = {Parameter("S"), Parameter("N"), Parameter("A"), Parameter("P  ")};
     Predicate test_predicate1 = Predicate("snap", t_parameter_list);
     cout << test_predicate1.to_string() << endl;
 }

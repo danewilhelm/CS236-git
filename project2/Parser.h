@@ -1,5 +1,5 @@
 #pragma once
-#include "../project1/Token.h"
+#include "Token.h"
 #include "Parameter.h"
 #include "Predicate.h"
 #include "Rule.h"
@@ -180,7 +180,9 @@ public:
             return {temp_name, cache_parameter_list};
         } else {
             throwError();
-        }
+
+            cout << "LOGIC ERROR IN HEADPREDICATE FUNCTION" << endl;
+            return {"LOGIC ERROR IN HEADPREDICATE FUNCTION", {}};        }
     }
 
     // COMPLETE
@@ -196,6 +198,8 @@ public:
         } else {
             throwError();
         }
+        cout << "LOGIC ERROR IN PREDICATE FUNCTION" << endl;
+        return {"LOGIC ERROR IN PREDICATE FUNCTION", {}};
     }
 
 //-------ending list grammar rules------------//
@@ -248,6 +252,8 @@ public:
         } else {
             throwError();
         }
+        cout << "LOGIC ERROR IN PARAMETER FUNCTION" << endl;
+        return {"LOGIC ERROR IN PARAMETER FUNCTION"};
     }
 
 
@@ -292,6 +298,8 @@ public:
             // report a syntax error
             throwError();
         }
+        cout << "LOGIC ERROR IN MATCH FUNCTION" << endl;
+        return "LOGIC ERROR IN MATCH FUNCTION";
     }
 
 };
