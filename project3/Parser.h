@@ -38,9 +38,9 @@ public:
             cout << "  " << problem_token.toString() << endl;
             exit(0);
         }
-        cout << "Success!" << endl;
+//        cout << "Success!" << endl;
         DatalogProgram datalog_program_temp = DatalogProgram(scheme_list_sum, fact_list_sum, rule_list_sum, query_list_sum);
-        cout << datalog_program_temp.to_string_datalog();
+//        cout << datalog_program_temp.to_string_datalog();
         return datalog_program_temp;
     }
 
@@ -115,7 +115,7 @@ public:
             cache_parameter_list.clear(); // clears the cache for this predicate
             string temp_name = match(ID); // This is the name for the predicate
             match(LEFT_PAREN);
-            add_string_to_cache_parameter_list(match(ID)); // This ID is a parameter for a scheme predicate
+            add_string_to_cache_parameter_list(match(ID), false); // This ID is a parameter for a scheme predicate
             idList();
             match(RIGHT_PAREN);
             scheme_list_sum.push_back(Predicate(temp_name, cache_parameter_list)); // adds predicate to scheme list
@@ -130,7 +130,7 @@ public:
             cache_parameter_list.clear(); // clears the cache for this predicate
             string temp_name = match(ID); // This is the name for the predicate
             match(LEFT_PAREN);
-            add_string_to_cache_parameter_list(match(STRING)); // This STRING is a parameter for a fact predicate
+            add_string_to_cache_parameter_list(match(STRING), true); // This STRING is a parameter for a fact predicate
             stringList();
             match(RIGHT_PAREN);
             match(PERIOD);
@@ -174,7 +174,7 @@ public:
             cache_parameter_list.clear(); // clears the cache for this predicate
             string temp_name = match(ID); // This is the name for the predicate
             match(LEFT_PAREN);
-            add_string_to_cache_parameter_list(match(ID)); // This ID is a parameter for a rule's head predicate
+            add_string_to_cache_parameter_list(match(ID), false); // This ID is a parameter for a rule's head predicate
             idList();
             match(RIGHT_PAREN);
             return {temp_name, cache_parameter_list};
@@ -226,7 +226,7 @@ public:
     void stringList() {
         if (tokenType() == COMMA) {
             match(COMMA);
-            add_string_to_cache_parameter_list(match(STRING)); // This is a parameter for a fact predicate
+            add_string_to_cache_parameter_list(match(STRING), true); // This is a parameter for a fact predicate
             stringList();
         // else: lambda
         }
@@ -235,7 +235,7 @@ public:
     void idList() {
         if (tokenType() == COMMA) {
             match(COMMA);
-            add_string_to_cache_parameter_list(match(ID)); // This is a parameter for a scheme predicate
+            add_string_to_cache_parameter_list(match(ID), false); // This is a parameter for a scheme predicate
             idList();
         } // else: lambda
     }
@@ -245,15 +245,15 @@ public:
     Parameter parameter() {
         if (tokenType() == STRING) {
             string temp_string = match(STRING);
-            return {temp_string};
+            return {temp_string, true};
         } else if (tokenType() == ID) {
             string temp_string = match(ID);
-            return {temp_string};
+            return {temp_string, false};
         } else {
             throwError();
         }
         cout << "LOGIC ERROR IN PARAMETER FUNCTION" << endl;
-        return {"LOGIC ERROR IN PARAMETER FUNCTION"};
+        return {"LOGIC ERROR IN PARAMETER FUNCTION", true};
     }
 
 
@@ -273,8 +273,8 @@ public:
         throw current_token();
     }
 
-    void add_string_to_cache_parameter_list(string temp) {
-        cache_parameter_list.push_back(Parameter(temp));
+    void add_string_to_cache_parameter_list(string temp, bool is_constant) {
+        cache_parameter_list.push_back(Parameter(temp, is_constant));
     }
 
 
