@@ -1,11 +1,11 @@
-#include "../project3/Token.h"
-#include "../project3/Scanner.h"
+#include "../project4/Token.h"
+#include "../project4/Scanner.h"
 
-#include "../project3/Parser.h"
-#include "../project3/Parameter.h"
-#include "../project3/Predicate.h"
-#include "../project3/Rule.h"
-#include "../project3/DatalogProgram.h"
+#include "../project4/Parser.h"
+#include "../project4/Parameter.h"
+#include "../project4/Predicate.h"
+#include "../project4/Rule.h"
+#include "../project4/DatalogProgram.h"
 
 #include <vector>
 #include <iostream>

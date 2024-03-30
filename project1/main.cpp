@@ -1,6 +1,6 @@
 #include <iostream>
-#include "../project3/Token.h"
-#include "../project3/Scanner.h"
+#include "../project4/Token.h"
+#include "../project4/Scanner.h"
 #include <fstream>
 using namespace std;
 

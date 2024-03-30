@@ -4,15 +4,15 @@
 #include <fstream>
 
 
-#include "Tuple.h"
-#include "Scheme.h"
-#include "Relation.h"
-#include "Database.h"
-#include "Interpreter.h"
+#include "../project4/Tuple.h"
+#include "../project4/Scheme.h"
+#include "../project4/Relation.h"
+#include "../project4/Database.h"
+#include "../project4/Interpreter.h"
 
-#include "DatalogProgram.h"
-#include "Parser.h"
-#include "Scanner.h"
+#include "../project4/DatalogProgram.h"
+#include "../project4/Parser.h"
+#include "../project4/Scanner.h"
 
 using namespace std;
 
