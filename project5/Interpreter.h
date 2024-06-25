@@ -3,10 +3,14 @@
 //#include <set>
 #include <sstream>
 #include <map>
+#include <stack>
+
 
 #include "Tuple.h"
 #include "Scheme.h"
 #include "Relation.h"
+#include "Node.h"
+#include "Graph.h"
 #include "Database.h"
 
 #include "DatalogProgram.h"
@@ -29,7 +33,7 @@ public:
     void interpret() {
         interpret_schemes_into_empty_relations();
         interpret_facts_into_tuples_and_add_to_associated_relations();
-        evaluate_all_rules();
+        evaluate_all_SCCs();
         evaluate_all_queries();
     }
 
@@ -74,9 +78,8 @@ public:
         }
     }
 
-    //-----------------------------Interpreting Rules--------------------------------------
-    void evaluate_all_rules() {
-        cout << "Rule Evaluation" << endl;
+    //-----------------------------Basic Algorithm of Evaluating Rules--------------------------------------
+    int evaluate_all_given_rules(vector<Rule> given_rules) {
         // Track the number of times this while loop takes (used when printing out the Rule Evaluation)
         int evaluate_rules_loop_counter = 0; // Rule Output helper
         while (true) {
@@ -85,13 +88,13 @@ public:
             bool new_tuple_was_added = false;
 
             // evaluate ALL the rules, checking if any new tuples were added
-            for (Rule current_rule : datalog_input.get_rule_list()) {
+            for (Rule current_rule : given_rules) {
                 // count the tuples before
                 Relation rule_relation_before = get_rule_relation_from_database(current_rule);
                 size_t tuple_count_before = rule_relation_before.get_tuple_set().size();
 
                 // evaluate the rule
-                cout << current_rule.to_string() << "." << endl;
+                cout << current_rule.to_string() << "." << endl; // Rule Evaluation Output
                 evaluate_rule(current_rule);
 
                 // count the tuples after
@@ -110,8 +113,7 @@ public:
             }
             // otherwise, continue to the next while loop
         }
-        // Rule Output
-        cout << "\nSchemes populated after " << evaluate_rules_loop_counter << " passes through the Rules.\n" << endl;
+        return evaluate_rules_loop_counter;
     }
 
     void evaluate_rule(Rule given_rule) {
@@ -173,11 +175,213 @@ public:
         return retrieved_relation;
     }
 
+    // ----------------------------Evaluating Rules based on SCCs (optimized rule evaluation)---------------------
+    static Graph makeGraph(const vector<Rule>& rules, string graph_direction) {
+        Graph graph(rules.size());
+        if (graph_direction != "forward" and graph_direction != "reverse") {
+            cout << "ERROR: given graph direction (" << graph_direction <<  ") is invalid" << endl;
+        }
+        // This loop identifies the 'from' end of possible edges in the graph.
+        int node_ID_from = 0;
+        for (Rule cur_rule_from : rules) {
+//            cout << "from rule R" << node_ID_from << ": " << cur_rule_from.to_string() << endl; // DEBUG
 
+            // loops over the predicates in the body of the current rule.
+            for (Predicate body_predicate_from : cur_rule_from.get_body_predicate_list()) {
+//                cout << "from body predicate: " << body_predicate_from.to_string() << endl; // DEBUG
+
+                // This loop identifies the 'to' end of possible edges in the graph
+                int node_ID_to = 0;
+                for (Rule cur_rule_to : rules) {
+//                    cout << "to rule R" << node_ID_to << ": " << cur_rule_to.to_string() << endl; // DEBUG
+                    if (body_predicate_from.get_name() == cur_rule_to.get_head_predicate().get_name()) {
+                        if (graph_direction == "reverse") {
+                            graph.addEdge(node_ID_to, node_ID_from);
+                        } else {
+                            graph.addEdge(node_ID_from, node_ID_to);
+//                            cout << "dependency found: (R" << node_ID_from << ",R" << node_ID_to << ")" << endl; // DEBUG
+                        }
+                    }
+                    node_ID_to++;
+                }
+            }
+            node_ID_from++;
+        }
+        return graph;
+    }
+
+    static stack<int> DFS_forest_post_order(Graph& reverse_graph) {
+        stack<int> post_order;
+        for (auto node_pair : reverse_graph.get_nodes_map()) {
+            post_order = DFS_tree_post_order(reverse_graph, node_pair.first, post_order);
+        }
+
+// DEBUG BLOCK
+//        cout << "post order complete" << endl;
+//        while (post_order.size() > 0) {
+//            cout << post_order.top() << endl;
+//            post_order.pop();
+//        }
+        return post_order;
+    }
+
+    static stack<int> DFS_tree_post_order(Graph& reverse_graph, int start_node_ID, stack<int> post_order) {
+        // base case: the node has already been explored
+        map<int, Node> nodes_map = reverse_graph.get_nodes_map();
+        Node start_node = nodes_map.at(start_node_ID);
+        if (start_node.has_been_visited()) {
+//            cout << "This node has already been explored. Moving on...\n" << endl; // DEBUG
+            return post_order;
+        }
+        // else: mark this node as visited
+        reverse_graph.mark_node_as_visited(start_node_ID);
+
+
+        // recursive case: the node has not been explored
+            // for every unexplored adjacent node, explore it
+        for (int adjacent_node_ID : start_node.get_adjacent_node_IDs()) {
+            Node adjacent_node = nodes_map.at(adjacent_node_ID);
+            if (adjacent_node.has_been_visited()) {
+                continue;
+            } else {
+                post_order = DFS_tree_post_order(reverse_graph, adjacent_node_ID, post_order);
+            }
+        }
+        // after all adjacent nodes of the start node have been pushed onto the stack...
+        // push this node ID onto the stack (this is the definition of post order)
+        post_order.push(start_node_ID);
+        return post_order;
+    }
+
+    static vector<set<int>> DFS_forest_search_for_SCCs(Graph& forward_graph, stack<int> post_order) {
+        // SCC stands for Strongly Connected Component
+
+        // reset all nodes in graph to unvisited
+        forward_graph.reset_all_markers_to_unvisited();
+
+        // from the given post_order, do a DFS_forest algorithm to find the SCCs
+        vector<set<int>> list_of_SCCs;
+        while(not post_order.empty()) {
+            int cur_node_ID = post_order.top();
+            post_order.pop();
+            // search for nodes in the SCC
+            set<int> found_SCC = DFS_find_SCC(forward_graph, cur_node_ID, {});
+            if (found_SCC.empty()) {
+                continue;
+            } else {
+                list_of_SCCs.push_back(found_SCC);
+            }
+        }
+        return list_of_SCCs;
+    }
+
+    static set<int> DFS_find_SCC(Graph& forward_graph, int start_node_ID, set<int> nodes_in_SCC) {
+        // base case: the node has already been explored
+        map<int, Node> nodes_map = forward_graph.get_nodes_map();
+        Node start_node = nodes_map.at(start_node_ID);
+        if (start_node.has_been_visited()) {
+            return nodes_in_SCC;
+        }
+        // else: mark this node as visited
+        forward_graph.mark_node_as_visited(start_node_ID);
+        // add this node to the SCC (pre-order: add the parent node before any of its children)
+        nodes_in_SCC.insert(start_node_ID);
+
+        // recursive case: the node has not been explored
+            // for every unexplored adjacent node, explore it
+        for (int adjacent_node_ID : start_node.get_adjacent_node_IDs()) {
+            Node adjacent_node = nodes_map.at(adjacent_node_ID);
+            if (adjacent_node.has_been_visited()) {
+                continue;
+            } else {
+                nodes_in_SCC = DFS_find_SCC(forward_graph, adjacent_node_ID, nodes_in_SCC);
+            }
+        }
+        return nodes_in_SCC;
+    }
+
+    vector<set<int>> find_all_SCCs_from_datalog() {
+        vector<Rule> rules = datalog_input.get_rule_list();
+        // Finding SCCs Algorithm
+        // Step 1: create forward dependency graph
+        Graph forward_dependency_graph = makeGraph(rules, "forward");
+        cout << "Dependency Graph" << endl; // Dependency Graph Output
+        cout << forward_dependency_graph.toString() << endl; // Dependency Graph Output
+        // step 2: create reverse dependency graph
+        Graph reverse_dependency_graph = makeGraph(rules, "reverse");
+
+
+        // step 3: get the post order path of the DFS_forest traversing through reverse graph (in numerical order)
+        stack<int> post_order = DFS_forest_post_order(reverse_dependency_graph);
+
+        // step 4: search for SCCs by doing a DFS_forest on the forward graph
+        // (in post order from step 3 , from greatest to least (thus the stack))
+        // Note: the order the nodes are visited is the order within an SCC (pre-order)
+        return DFS_forest_search_for_SCCs(forward_dependency_graph, post_order);
+    }
+
+    void evaluate_all_SCCs() {
+
+        // set up variables from other classes
+        vector<Rule> rules = datalog_input.get_rule_list();
+        map<int, Node> nodes_map = makeGraph(rules, "forward").get_nodes_map();
+
+        // find all the SCCs
+        vector<set<int>> list_of_SCCs = find_all_SCCs_from_datalog();
+
+        // iterate over each SCC separately and evaluate the rules inside
+        // if the SCC only contains 1 rule node, and that rule node is NOT dependent on itself, then evaluate it only once
+        cout << "Rule Evaluation" << endl; // Rule Evaluation Output
+        for (set<int>& cur_SCC: list_of_SCCs) {
+            cout << SCC_to_string(cur_SCC, true); // Rule Evaluation Output
+            if (cur_SCC.size() == 1) {
+                int SCC_solo_node_ID = *cur_SCC.begin();
+                Node SCC_solo_node = nodes_map.at(SCC_solo_node_ID);
+                set<int> adjacent_nodes_set = SCC_solo_node.get_adjacent_node_IDs();
+                if (adjacent_nodes_set.find(SCC_solo_node_ID) == adjacent_nodes_set.end()) {
+                    Rule SCC_solo_rule = rules.at(SCC_solo_node_ID);
+                    cout << SCC_solo_rule.to_string() << "." << endl; // Rule Evaluation Output
+                    evaluate_rule(SCC_solo_rule);
+                    cout << "1 passes: " << SCC_to_string(cur_SCC, false);
+                    continue;
+                }
+                // else, it is a single node SCC that is dependent on itself
+                // It must be evaluated like multi-node SCCs using fixed-point algorithm
+            }
+            // else, perform the fixed point algorithm on the SCC
+
+            // retrieve the sub-list of rules for this SCC
+            vector<Rule> SCC_rules;
+            for (int SCC_node_ID : cur_SCC) {
+                Rule SCC_rule = rules.at(SCC_node_ID);
+                SCC_rules.push_back(SCC_rule);
+            }
+            int passes_taken = evaluate_all_given_rules(SCC_rules);
+            // Rule Evaluation Output
+            cout << passes_taken << " passes: " << SCC_to_string(cur_SCC, false);
+        }
+    }
+
+    string SCC_to_string(set<int> cur_SCC, bool include_header) {
+        stringstream out;
+        if (include_header) {
+            out << "SCC: ";
+        }
+        size_t loop_counter = 0;
+        for (int SCC_node_ID : cur_SCC) {
+            out << "R" << SCC_node_ID;
+            if (loop_counter + 1 < cur_SCC.size()) {
+                out << ", ";
+            }
+            loop_counter++;
+        }
+        out << "\n";
+        return out.str();
+    }
 
     //-----------------------------Interpreting Queries--------------------------------------
     void evaluate_all_queries() {
-        cout << "Query Evaluation" << endl; // Query Output
+        cout << "\nQuery Evaluation" << endl; // Query Output
         for (auto& query_predicate : datalog_input.get_query_list()) {
             Relation result_query_relation = evaluate_query(query_predicate);
             print_query_result(result_query_relation, query_predicate);

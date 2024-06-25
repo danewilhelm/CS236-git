@@ -55,7 +55,7 @@ public:
             // if the tuple is empty, don't print it
             // occurs when a query contains a fact, so all the tuple columns are removed, but not the tuple itself
             if (cur_tuple.size() > 0) {
-                out << cur_tuple.toString(scheme) << endl;
+                out << "  " << cur_tuple.toString(scheme) << endl;
             }
         }
         return out.str();
