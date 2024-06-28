@@ -13,7 +13,7 @@
 #include "Graph.h"
 #include "Database.h"
 
-#include "DatalogProgram.h"
+#include "../project2/DatalogProgram.h"
 
 #pragma once
 using namespace std;

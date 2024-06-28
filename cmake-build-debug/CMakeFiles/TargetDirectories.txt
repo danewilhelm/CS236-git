@@ -1,3 +1,0 @@
-C:/Users/epicd/clion/CS236-git/cmake-build-debug/CMakeFiles/CS236_git.dir
-C:/Users/epicd/clion/CS236-git/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/epicd/clion/CS236-git/cmake-build-debug/CMakeFiles/rebuild_cache.dir

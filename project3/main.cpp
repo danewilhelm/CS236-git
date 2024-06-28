@@ -10,9 +10,9 @@
 #include "../project5/Database.h"
 #include "../project5/Interpreter.h"
 
-#include "../project5/DatalogProgram.h"
-#include "../project5/Parser.h"
-#include "../project5/Scanner.h"
+#include "../project2/DatalogProgram.h"
+#include "../project2/Parser.h"
+#include "../project1/Scanner.h"
 
 using namespace std;
 

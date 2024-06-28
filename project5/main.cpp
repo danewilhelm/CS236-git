@@ -1,6 +1,6 @@
 #include "Interpreter.h"
-#include "Scanner.h"
-#include "Parser.h"
+#include "../project1/Scanner.h"
+#include "../project2/Parser.h"
 
 #include <fstream>
 #include <iostream>
